@@ -3,6 +3,12 @@ set -e
 
 echo "🚀 Iniciando aplicación Laravel + Filament en Render..."
 
+# Crear archivo .env basado en .env.example si no existe
+if [ ! -f .env ]; then
+    echo "📝 Creando archivo .env..."
+    cp .env.example .env || touch .env
+fi
+
 # Esperar a que PostgreSQL esté disponible
 echo "⏳ Esperando conexión a base de datos..."
 timeout=60
