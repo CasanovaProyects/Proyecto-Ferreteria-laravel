@@ -9,6 +9,7 @@ if [ ! -f .env ]; then
     cat > .env << 'EOF'
 APP_NAME=Ferreteria
 APP_ENV=production
+APP_KEY=base64:r1GcTGWd4vJ7u3AfbfGXHL9phKDa2FMOdpmHbRWSuhw=
 APP_DEBUG=false
 APP_URL=https://proyecto-ferreteria-laravel-1.onrender.com
 APP_LOCALE=en
@@ -22,6 +23,12 @@ LOG_STACK=single
 LOG_DEPRECATIONS_CHANNEL=null
 LOG_LEVEL=error
 DB_CONNECTION=pgsql
+DATABASE_URL=postgresql://dbferreteria_user:CWAGWgsX4DEnEgW1oVf6s1sfvAM2JfTy@dpg-d1qntaripnbc73dficpg-a.oregon-postgres.render.com:5432/dbferreteria
+PGDATABASE=dbferreteria
+PGHOST=dpg-d1qntaripnbc73dficpg-a.oregon-postgres.render.com
+PGPASSWORD=CWAGWgsX4DEnEgW1oVf6s1sfvAM2JfTy
+PGPORT=5432
+PGUSER=dbferreteria_user
 DB_FOREIGN_KEYS=true
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
@@ -51,27 +58,6 @@ AWS_BUCKET=
 AWS_USE_PATH_STYLE_ENDPOINT=false
 VITE_APP_NAME=Ferreteria
 EOF
-fi
-
-# Agregar variables de base de datos desde variables de entorno de Render
-echo "🔗 Configurando variables de base de datos..."
-if [ ! -z "$DATABASE_URL" ]; then
-    echo "DATABASE_URL=${DATABASE_URL}" >> .env
-fi
-if [ ! -z "$PGDATABASE" ]; then
-    echo "PGDATABASE=${PGDATABASE}" >> .env
-fi
-if [ ! -z "$PGHOST" ]; then
-    echo "PGHOST=${PGHOST}" >> .env
-fi
-if [ ! -z "$PGPASSWORD" ]; then
-    echo "PGPASSWORD=${PGPASSWORD}" >> .env
-fi
-if [ ! -z "$PGPORT" ]; then
-    echo "PGPORT=${PGPORT}" >> .env
-fi
-if [ ! -z "$PGUSER" ]; then
-    echo "PGUSER=${PGUSER}" >> .env
 fi
 
 # Esperar a que PostgreSQL esté disponible
