@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
@@ -9,14 +9,24 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     libpq-dev \
+    libicu-dev \
     zip \
     unzip \
     nodejs \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar extensiones PHP (PostgreSQL y MySQL)
-RUN docker-php-ext-install pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd zip
+# Instalar extensiones PHP (agregando intl que faltaba)
+RUN docker-php-ext-install \
+    pdo_pgsql \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    intl
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -41,8 +51,8 @@ WORKDIR /var/www/html
 # Copiar archivos del proyecto
 COPY . .
 
-# Instalar dependencias de Composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Instalar dependencias de Composer (ignorando conflictos de plataforma)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 # Instalar dependencias de Node.js y compilar assets
 RUN npm install && npm run build
