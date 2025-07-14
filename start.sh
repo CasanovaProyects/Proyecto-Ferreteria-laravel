@@ -3,10 +3,75 @@ set -e
 
 echo "🚀 Iniciando aplicación Laravel + Filament en Render..."
 
-# Crear archivo .env basado en .env.example si no existe
+# Crear archivo .env completo si no existe
 if [ ! -f .env ]; then
-    echo "📝 Creando archivo .env..."
-    cp .env.example .env || touch .env
+    echo "📝 Creando archivo .env completo..."
+    cat > .env << 'EOF'
+APP_NAME=Ferreteria
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://proyecto-ferreteria-laravel-1.onrender.com
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+APP_MAINTENANCE_DRIVER=file
+PHP_CLI_SERVER_WORKERS=4
+BCRYPT_ROUNDS=12
+LOG_CHANNEL=single
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=error
+DB_CONNECTION=pgsql
+DB_FOREIGN_KEYS=true
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+CACHE_STORE=file
+MEMCACHED_HOST=127.0.0.1
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+MAIL_MAILER=log
+MAIL_SCHEME=null
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS=hello@ferreteria.com
+MAIL_FROM_NAME=Ferreteria
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+VITE_APP_NAME=Ferreteria
+EOF
+fi
+
+# Agregar variables de base de datos desde variables de entorno de Render
+echo "🔗 Configurando variables de base de datos..."
+if [ ! -z "$DATABASE_URL" ]; then
+    echo "DATABASE_URL=${DATABASE_URL}" >> .env
+fi
+if [ ! -z "$PGDATABASE" ]; then
+    echo "PGDATABASE=${PGDATABASE}" >> .env
+fi
+if [ ! -z "$PGHOST" ]; then
+    echo "PGHOST=${PGHOST}" >> .env
+fi
+if [ ! -z "$PGPASSWORD" ]; then
+    echo "PGPASSWORD=${PGPASSWORD}" >> .env
+fi
+if [ ! -z "$PGPORT" ]; then
+    echo "PGPORT=${PGPORT}" >> .env
+fi
+if [ ! -z "$PGUSER" ]; then
+    echo "PGUSER=${PGUSER}" >> .env
 fi
 
 # Esperar a que PostgreSQL esté disponible
