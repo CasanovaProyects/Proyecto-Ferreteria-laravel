@@ -4,9 +4,14 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductoResource\Pages;
 use App\Filament\Resources\ProductoResource\RelationManagers;
+
 use App\Models\Producto;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -21,40 +26,35 @@ class ProductoResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //
-
-                Forms\Components\TextInput::make('nombre')
-                ->required()
-                ->label('Nombre del Producto'),
-            
-            Forms\Components\TextInput::make('precio')
-                ->numeric()
-                ->required()
-                ->label('Precio'),
-                
-
-            Forms\Components\Textarea::make('descripcion')
-                ->label('Descripción')
-                ->nullable(),
-            
-                Forms\Components\TextInput::make('stock')  // Cambié a TextInput
-                ->numeric()  // Ahora puedes usar numeric() aquí
-                ->required()  // Si quieres que sea obligatorio
-                ->label('Stock'),
-                
-            ]);
+        return $form->schema([
+        TextInput::make('nombre')->required(),
+        TextInput::make('sku')->unique()->required(),
+        Select::make('categoria_id')
+            ->relationship('categoria', 'nombre')
+            ->searchable()
+            ->required(),
+        TextInput::make('precio_compra')->numeric()->prefix('$'),
+        TextInput::make('precio_venta')->numeric()->prefix('$')->required(),
+        TextInput::make('stock')->numeric()->minValue(0)->required(),
+        FileUpload::make('foto')          // ← subida de imagen
+            ->directory('productos')
+            ->image()
+            ->maxSize(1024),              // 1 MB
+        Toggle::make('publicado'),
+    ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-            Tables\Columns\TextColumn::make('nombre')->label('Nombre')->searchable(),
-            Tables\Columns\TextColumn::make('precio')->label('Precio')->sortable(),
-            Tables\Columns\TextColumn::make('descripcion')->label('Descripción')->limit(30),
-            Tables\Columns\TextColumn::make('stock')->label('Stock')->sortable(),
+                Tables\Columns\TextColumn::make('nombre')->label('Nombre')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('sku')->label('SKU')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('categoria.nombre')->label('Categoría')->sortable(),
+                Tables\Columns\TextColumn::make('precio_venta')->label('Precio Venta')->money('COP', true)->sortable(),
+                Tables\Columns\TextColumn::make('stock')->label('Stock')->sortable(),
+                Tables\Columns\IconColumn::make('publicado')->boolean()->label('Publicado'),
+                Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime('d/m/Y')->sortable(),
             ])
             ->filters([
                 //

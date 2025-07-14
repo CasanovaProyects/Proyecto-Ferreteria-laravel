@@ -991,7 +991,7 @@ Route::get('/', function () {
                 <hr class="my-4 bg-secondary">
                 <div class="row">
                     <div class="col-md-6">
-                        <p class="mb-0">&copy; 2024 FerroMax. Todos los derechos reservados.</p>
+                        <p class="mb-0">&copy; 2024 FerroMax. Todos los derechos reservados Juan David Casanova Baron.</p>
                     </div>
                     <div class="col-md-6 text-md-end">
                         <a href="/dashboard" class="text-warning text-decoration-none">

@@ -6,7 +6,7 @@ return [
     | Filament Path
     |--------------------------------------------------------------------------
     */
-    'path' => 'admin', // Esto hace que Filament esté disponible en /admin
+    'path' => 'dashboard', // Restaurado: Filament disponible en /dashboard
     
     /*
     |--------------------------------------------------------------------------
