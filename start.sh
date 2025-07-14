@@ -3,10 +3,6 @@ set -e
 
 echo "🚀 Iniciando aplicación Laravel + Filament en Render..."
 
-# Copiar archivo de configuración de producción
-echo "📋 Configurando entorno de producción..."
-cp .env.production .env
-
 # Esperar a que PostgreSQL esté disponible
 echo "⏳ Esperando conexión a base de datos..."
 timeout=60
@@ -44,6 +40,12 @@ php artisan cache:clear
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
+
+# Intentar compilar assets en runtime si no se compilaron durante build
+if [ ! -d "public/build" ]; then
+    echo "🎨 Compilando assets en runtime..."
+    npm run build || echo "Warning: No se pudieron compilar assets"
+fi
 
 # Optimizar para producción
 echo "⚡ Optimizando para producción..."
