@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 echo "🚀 Iniciando aplicación Laravel + Filament en Render..."
+
 # Crear archivo .env completo si no existe
 if [ ! -f .env ]; then
     echo "📝 Creando archivo .env completo..."
@@ -9,7 +10,7 @@ APP_NAME=Ferreteria
 APP_ENV=production
 APP_KEY=base64:r1GcTGWd4vJ7u3AfbfGXHL9phKDa2FMOdpmHbRWSuhw=
 APP_DEBUG=false
-APP_URL=https://proyecto-ferreteria-laravelcasanovajuan.onrender.com
+APP_URL=https://sermaxferrecasanova.onrender.com
 APP_LOCALE=en
 APP_FALLBACK_LOCALE=en
 APP_FAKER_LOCALE=en_US
@@ -62,6 +63,14 @@ AWS_USE_PATH_STYLE_ENDPOINT=false
 VITE_APP_NAME=Ferreteria
 EOF
 fi
+
+# Configurar permisos iniciales
+echo "🔐 Configurando permisos iniciales..."
+chown -R www-data:www-data /var/www/html
+chmod -R 755 /var/www/html
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
 # Esperar a que PostgreSQL esté disponible
 echo "⏳ Esperando conexión a base de datos..."
 timeout=60
@@ -74,52 +83,87 @@ while ! php artisan migrate:status > /dev/null 2>&1; do
         break
     fi
 done
+
 # Generar APP_KEY si no existe
 if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
     echo "🔑 Generando APP_KEY..."
     php artisan key:generate --force
     echo "APP_KEY generado: $APP_KEY"
 fi
+
 # Ejecutar migraciones
 echo "📊 Ejecutando migraciones..."
 php artisan migrate --force
-# Crear usuario admin de Filament
+
+# Limpiar todo el caché antes de proceder
+echo "🧹 Limpiando caché completo..."
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan event:clear
+
+# Crear usuario admin de Filament ANTES de cachear rutas
 echo "👤 Creando usuario admin de Filament..."
 php artisan make:filament-user \
     --name="Admin" \
     --email="admin@admin.com" \
     --password="admin123" || echo "Usuario admin ya existe"
-# Publicar assets de Filament
+
+# Publicar assets de Filament ANTES de cachear
 echo "🎨 Publicando assets de Filament..."
-php artisan filament:assets || echo "Warning: No se pudieron publicar assets de Filament"
-# Limpiar caché
-echo "🧹 Limpiando caché..."
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-# Intentar compilar assets en runtime si no se compilaron durante build
-if [ ! -d "public/build" ]; then
-    echo "🎨 Compilando assets en runtime..."
-    npm run build || echo "Warning: No se pudieron compilar assets"
+php artisan filament:install --panels
+php artisan vendor:publish --tag=filament-config
+php artisan vendor:publish --tag=filament-assets --force
+php artisan vendor:publish --tag=filament-views
+
+# Verificar que los directorios importantes existan
+echo "📁 Verificando estructura de directorios..."
+mkdir -p public/css public/js public/build public/css/filament public/js/filament
+chmod -R 755 public/
+
+# Compilar assets si no se compilaron durante build
+echo "🎨 Verificando y compilando assets..."
+if [ ! -d "public/build" ] || [ ! "$(ls -A public/build)" ]; then
+    echo "Compilando assets con Vite..."
+    npm install --production=false
+    npm run build || echo "Warning: Fallo en npm run build"
 fi
+
+# Crear enlace simbólico para storage
+echo "🔗 Creando enlace simbólico..."
+php artisan storage:link
+
 # Optimizar para producción
 echo "⚡ Optimizando para producción..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-# Crear enlace simbólico para storage
-echo "🔗 Creando enlace simbólico..."
-php artisan storage:link
+
+# Verificar que los directorios importantes existan
+echo "📁 Verificando estructura de directorios..."
+mkdir -p public/css public/js public/build public/css/filament public/js/filament
+chmod -R 755 public/
+
 # Configurar permisos finales
-echo "🔐 Configurando permisos..."
-chown -R www-data:www-data storage/ bootstrap/cache/
-chmod -R 755 storage/ bootstrap/cache/
+echo "🔐 Configurando permisos finales..."
+chown -R www-data:www-data storage/ bootstrap/cache/ public/
+chmod -R 755 storage/ bootstrap/cache/ public/
+chmod -R 755 public/css/ public/js/ public/build/
+
+# Asegurar que Apache pueda leer los assets
+echo "🌐 Configurando permisos de Apache..."
+chown -R www-data:www-data /var/www/html/public
+find public/ -type f -exec chmod 644 {} \;
+find public/ -type d -exec chmod 755 {} \;
+
 echo "✅ Aplicación lista en Render!"
 echo "📝 Credenciales admin:"
 echo "   Email: admin@admin.com"
 echo "   Password: admin123"
 echo "   URL Admin: /admin"
+echo "   URL Login: /admin/login"
+
 # Iniciar Apache
 echo "🌐 Iniciando servidor Apache..."
 exec apache2-foreground
